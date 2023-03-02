@@ -1,0 +1,23 @@
+name: GitHub Classroom Workflow
+
+on:
+  push:
+    branches: [ test ]
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  build:
+    name: Autograding
+    runs-on: ubuntu-latest
+    container:
+      image: tmaulaz/heig-info:latest
+      env:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
+    steps:
+      - uses: actions/checkout@v2
+      - uses: education/autograding@v1
