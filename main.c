@@ -17,7 +17,7 @@ void getCurrentTime(Date* d){
     struct tm *ptm = localtime(&rawtime);
 
     d->year = ptm->tm_year + 1900;
-    d->month = ptm->tm_mon;
+    d->month = ptm->tm_mon + 1;
     d->day = ptm->tm_mday;
 }
 
@@ -79,25 +79,83 @@ void print_time(){
     printf("%s", str);
 }
 
-void new_file(){
-
+void new_file(char* filename){
+    FILE* f = fopen(filename, "w");
+    fclose(f);
 }
 
-void print_file(){
+void print_file(char* filename){
+    FILE* f = fopen(filename, "r");
+    if( f == NULL ){
+        print_red("Erreur d'ouverture du fichier\n");
+        return;
+    }
 
+    do{
+        char buffer[100];
+        char* c = fgets(buffer, sizeof(buffer), f);
+
+        if( c == NULL ){
+            fclose(f);
+            return;
+        }
+
+        fprintf(stdout, "%s", buffer);
+    }while(true);
 }
 
-void append_measure(){
+void append_measure(char* filename){
+    FILE* f = fopen(filename, "a");
+    if( f == NULL ){
+        print_red("Erreur d'ouverture du fichier\n");
+        return;
+    }
 
+    Date d;
+    getCurrentTime(&d);
+
+    double val = ask_user_double_value("Nombre\n>",-1000.0,1000.0);
+
+    fprintf(f, "%d-%d-%d,%.2lf\n", d.year, d.month, d.day, val);
+
+    fclose(f);
 }
 
-void print_measure(){
+void print_measure(char* filename){
+    FILE* f = fopen(filename, "r");
+    if( f == NULL ){
+        print_red("Erreur d'ouverture du fichier\n");
+        return;
+    }
 
+    double sum = 0;
+    int cpt = 0;
+    do{
+        char buffer[100];
+        char* c = fgets(buffer, sizeof(buffer), f);
+
+        if( c == NULL ){
+            fprintf(stdout, "La moyenne sur %d valeurs : %.2lf\n", cpt, 
+                cpt == 0 ? 0.0 : sum/cpt);
+
+            fclose(f);
+            return;
+        }
+
+        double val;
+        if( sscanf(buffer, "%*d-%*d-%*d,%lf", &val) == 1 ){
+            sum += val;
+            cpt++;
+        }
+
+    }while(true);
 }
 
 int main(int argc, char *argv[]){
  
     print_blue("Programme start\n\n");
+
+    char filename[] = "measure.csv";
 
     int menu_choice;
     do
@@ -105,6 +163,22 @@ int main(int argc, char *argv[]){
         menu_choice = menu();
         switch (menu_choice)
         {
+            case 1:
+                new_file(filename);
+                break;
+
+            case 2:
+                print_file(filename);
+                break;
+
+            case 3:
+                append_measure(filename);
+                break;
+
+            case 4:
+                print_measure(filename);
+                break;
+
             case 6:
                 print_time();
                 break;
