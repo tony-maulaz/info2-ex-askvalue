@@ -77,15 +77,16 @@ int menu(){
     puts("\t4. Afficher la moyenne.");
     puts("\t5. Quitter");
     puts("\t6. Affiche la date.");
+    puts("\t7. Test getmeasure.");
 
-    return ask_user_int_value("> ", 0, 6);
+    return ask_user_int_value("> ", 0, 7);
 }
 
 
 // Partie 2, binaire
-void write_to_file(Measure* m){
+void write_to_file(Measure* m, char* filename_bin){
 
-    FILE* f = fopen("meas", "a");
+    FILE* f = fopen(filename_bin, "a");
     
     if( f == NULL ){
         print_red("Erreur d'ouverture du fichier\n");
@@ -130,10 +131,33 @@ void print_file(char* filename){
         }
 
         fprintf(stdout, "%s", buffer);
+    }while(true);    
+}
+
+void print_binary_file(char* filename){    
+    FILE* f = fopen(filename, "r");
+    if( f == NULL ){
+        print_red("Erreur d'ouverture du fichier\n");
+        return;
+    }
+
+    print_blue("Lecture du fichier binaire\n");
+    
+    do{
+        Measure m;
+        size_t nb = fread(&m, sizeof(Measure), 1, f);
+
+        if( nb != 1 ){
+            fclose(f);
+            return;
+        }
+
+        show_measure(&m);
     }while(true);
 }
 
-void append_measure(char* filename){
+
+void append_measure(char* filename, char* filename_bin){
     static int cpt = 0;
 
     FILE* f = fopen(filename, "a");
@@ -147,11 +171,12 @@ void append_measure(char* filename){
 
     double val = ask_user_double_value("Nombre\n>",-1000.0,1000.0);
 
+    // Create bin part
     Measure m;
     m.num = cpt++;
     m.val = val;
     m.d = d;
-    write_to_file(&m);
+    write_to_file(&m, filename_bin);
 
     fprintf(f, "%d-%d-%d,%.2lf\n", d.year, d.month, d.day, val);
 
@@ -210,9 +235,7 @@ int main(int argc, char *argv[]){
     print_blue("Programme start\n\n");
 
     char filename[] = "measure.csv";
-
-    get_measure(1);
-    exit(1);
+    char filename_bin[] = "meas";
 
     int menu_choice;
     do
@@ -222,14 +245,16 @@ int main(int argc, char *argv[]){
         {
             case 1:
                 new_file(filename);
+                new_file(filename_bin);
                 break;
 
             case 2:
                 print_file(filename);
+                print_binary_file(filename_bin);
                 break;
 
             case 3:
-                append_measure(filename);
+                append_measure(filename, filename_bin);
                 break;
 
             case 4:
@@ -238,6 +263,10 @@ int main(int argc, char *argv[]){
 
             case 6:
                 print_time();
+                break;
+
+            case 7:
+                get_measure(1);
                 break;
 
             default:
