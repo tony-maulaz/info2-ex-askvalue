@@ -166,6 +166,8 @@ void append_measure(char* filename, char* filename_bin){
         return;
     }
     
+    // il est possible de simplifier le code en utilisant uniquement
+    // le champ date qui se trouve dans la structure m
     Date d;
     getCurrentTime(&d);
 
