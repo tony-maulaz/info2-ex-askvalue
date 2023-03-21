@@ -3,14 +3,27 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include<time.h>
+#include <time.h>
 #include "helper.h"
+#include <stdint.h>
 
 typedef struct {
     int year;
     int month;
     int day;
 } Date;
+
+typedef struct {
+    int16_t num;
+    Date d;
+    int16_t val;
+} Measure;
+
+void show_measure(Measure* m){
+    printf("Num : %d\n", m->num);
+    printf("  Val : %d\n", m->val);
+    printf("  Day : %d\n", m->d.day);
+}
 
 void getCurrentTime(Date* d){
     time_t rawtime = time(NULL);
@@ -68,6 +81,22 @@ int menu(){
     return ask_user_int_value("> ", 0, 6);
 }
 
+
+// Partie 2, binaire
+void write_to_file(Measure* m){
+
+    FILE* f = fopen("meas", "a");
+    
+    if( f == NULL ){
+        print_red("Erreur d'ouverture du fichier\n");
+        return;
+    }
+
+    fwrite(m, sizeof(Measure), 1, f);
+    fclose(f);
+}
+
+
 // menu actions
 void print_time(){
     Date d;
@@ -105,16 +134,24 @@ void print_file(char* filename){
 }
 
 void append_measure(char* filename){
+    static int cpt = 0;
+
     FILE* f = fopen(filename, "a");
     if( f == NULL ){
         print_red("Erreur d'ouverture du fichier\n");
         return;
     }
-
+    
     Date d;
     getCurrentTime(&d);
 
     double val = ask_user_double_value("Nombre\n>",-1000.0,1000.0);
+
+    Measure m;
+    m.num = cpt++;
+    m.val = val;
+    m.d = d;
+    write_to_file(&m);
 
     fprintf(f, "%d-%d-%d,%.2lf\n", d.year, d.month, d.day, val);
 
@@ -151,11 +188,31 @@ void print_measure(char* filename){
     }while(true);
 }
 
+void get_measure(int pos){
+    FILE* f = fopen("meas", "r");
+    
+    if( f == NULL ){
+        print_red("Erreur d'ouverture du fichier\n");
+        return;
+    }
+
+    Measure m;
+    fseek(f, sizeof(Measure)*pos, SEEK_SET);
+    fread(&m, sizeof(Measure), 1, f);
+    
+    show_measure(&m);
+    
+    fclose(f);
+}
+
 int main(int argc, char *argv[]){
  
     print_blue("Programme start\n\n");
 
     char filename[] = "measure.csv";
+
+    get_measure(1);
+    exit(1);
 
     int menu_choice;
     do
